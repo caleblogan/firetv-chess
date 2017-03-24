@@ -6,7 +6,12 @@ const DEFAULT_LIGHT_STATUS = 'Not Set'
 const BASE_URL = 'localhost:3000'
 
 window.onload = function() {
-  // let board = ChessBoard('board', 'start')
+  let config = {
+    draggable: true,
+    position: 'start',
+    pieceTheme: '/chessboardjs/img/chesspieces/wikipedia/{piece}.png'
+  }
+  let board = ChessBoard('board', config)
 
   // let lightStatusElem = document.querySelector('#lightStatus')
   // lightStatusElem.innerHTML = lightStatus.innerHTML || DEFAULT_LIGHT_STATUS

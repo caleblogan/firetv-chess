@@ -4744,7 +4744,12 @@ var DEFAULT_LIGHT_STATUS = 'Not Set';
 var BASE_URL = 'localhost:3000';
 
 window.onload = function () {
-  // let board = ChessBoard('board', 'start')
+  var config = {
+    draggable: true,
+    position: 'start',
+    pieceTheme: '/chessboardjs/img/chesspieces/wikipedia/{piece}.png'
+  };
+  var board = ChessBoard('board', config);
 
   // let lightStatusElem = document.querySelector('#lightStatus')
   // lightStatusElem.innerHTML = lightStatus.innerHTML || DEFAULT_LIGHT_STATUS
@@ -4758,7 +4763,6 @@ window.onload = function () {
   //   lightStatusElem.innerHTML = data.lightStatus
   //   document.body.style['background-color'] = data.lightStatus === 'on' ? 'white' : 'black'
   // })
-
 
 };
 
