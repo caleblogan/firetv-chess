@@ -1,0 +1,10 @@
+body {
+  background-color: white;
+  padding:60px;
+}
+
+.box {
+  width: 900px;
+  height: 800px;
+  background-color: blue;
+}

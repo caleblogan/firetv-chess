@@ -1,0 +1,26 @@
+{
+  "name": "firetv_chess",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build_frontend": "node_modules/.bin/webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dynasty": "^0.2.7",
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "qwest": "^4.4.5",
+    "socket.io": "^1.7.3",
+    "socket.io-client": "^1.7.3"
+  },
+  "devDependencies": {
+    "babel-core": "^6.24.0",
+    "babel-loader": "^6.4.1",
+    "babel-preset-env": "^1.2.2",
+    "webpack": "^2.3.1"
+  }
+}

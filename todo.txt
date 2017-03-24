@@ -1,0 +1,5 @@
+[*] get frontent js building
+[*] get hot reloading frontend
+[*] get hot reloading backend
+[*] get build process done
+[*] update client when db changes
