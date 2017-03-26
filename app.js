@@ -2,30 +2,38 @@ var express = require('express')
 var http = require('http')
 var app = module.exports.app = express()
 
+const Chess = require('chess.js').Chess
+
 var server = http.createServer(app);
 var io = require('socket.io').listen(server)
 
 io.on('connection', function(client){
   // client.emit('light', {lightStatus: 'off'})
-  client.on('light', function(data){
-    let userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
-    users.find(userId)
-        .then(user => {
-          if (user) {
-            data.lightStatus = user.lightStatus
-          }
-          client.emit('light', data)
-        })
-        .catch(err => {
-          console.log(err)
-          data.lightStatus = 'err'
-          data.error = err
-          client.emit('light', data)
-        })
-  })
+  // client.on('light', function(data){
+  //   let userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
+  //   users.find(userId)
+  //       .then(user => {
+  //         if (user) {
+  //           data.lightStatus = user.lightStatus
+  //         }
+  //         client.emit('light', data)
+  //       })
+  //       .catch(err => {
+  //         console.log(err)
+  //         data.lightStatus = 'err'
+  //         data.error = err
+  //         client.emit('light', data)
+  //       })
+  // })
+
+  // client.on('move', function(data) {
+  //   console.log('Move:', data)
+  // })
+
   client.on('disconnect', function(){
     console.log(`Client disconnected`)
   })
+
 });
 
 const config = require('./config')
@@ -83,6 +91,81 @@ app.get('/api/light_was_updated', function(req, res) {
         data.error = err
         io.emit('light', data)
       })
+})
+
+app.get('/api/move', function(req, res) {
+  let from = req.query['from']
+  let to = req.query['to']
+  let userId = req.query['userId']
+  users.find(userId)
+      .then(user => {
+        if (!user) {
+          return res.send(JSON.stringify({'error': 'Invalid userId'}))
+        }
+        let game = null
+        if (user.game) {
+          game = new Chess(user.game)
+          console.log(game.fen())
+        } else {
+          game = new Chess()
+        }
+        let move = game.move({from: from, to: to})
+        if (move) {
+          io.emit(userId, {from: from, to: to, userId: userId})
+          console.log('moving before')
+          res.send(JSON.stringify({'move': from + '-' + to, userId: userId}))
+          users.update(userId, {game: game.fen()})
+          console.log('moving after')
+        } else {
+          res.send(JSON.stringify({'error': 'Invalid Move', userId: userId}))
+        }
+      })
+      .catch(err => {
+        console.log(err)
+        res.send(JSON.stringify({'error': 'There was an error connecting to database'}))
+      })
+})
+
+app.get('/api/fen', function(req, res) {
+  let userId = req.query['userId']
+  users.find(userId)
+      .then(user => {
+        if (!user) {
+          return res.send(JSON.stringify({'error': 'Invalid userId'}))
+        }
+        res.send(JSON.stringify({fen: user.game}))
+      })
+      .catch(err => {
+        console.log('err:', err)
+        res.send(JSON.stringify({'error': 'There was an error connecting to database'}))
+      })
+})
+
+app.get('/api/new_game', function(req, res) {
+  let userId = req.query['userId']
+  users.find(userId)
+      .then(user => {
+        if (!user) {
+          return res.send(JSON.stringify({'error': 'Invalid userId'}))
+        }
+        let game = new Chess()
+        users.update(userId, {game: game.fen()})
+          .then(data => {
+            res.send(JSON.stringify({'message': 'Successfully created a new game'}))
+            io.emit(userId, {newGame: 'true'})
+          })
+          .catch(err => {
+            res.send(JSON.stringify({'error': 'There was a problem creating a new game'}))
+          })
+      })
+      .catch(err => {
+        console.log('err:', err)
+        res.send(JSON.stringify({'error': 'There was an error connecting to database'}))
+      })
+})
+
+app.get('/api/tits', function(req, res) {
+  res.send(JSON.stringify({'message': 'I like tits'}))
 })
 
 server.listen(3000)

@@ -4743,6 +4743,9 @@ var sock = __webpack_require__(26)('http://192.168.1.192:3000');
 var DEFAULT_LIGHT_STATUS = 'Not Set';
 var BASE_URL = 'localhost:3000';
 
+var userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ';
+// const userId = 'emo'
+
 window.onload = function () {
   var config = {
     draggable: true,
@@ -4751,12 +4754,19 @@ window.onload = function () {
   };
   var board = ChessBoard('board', config);
 
-  // let lightStatusElem = document.querySelector('#lightStatus')
-  // lightStatusElem.innerHTML = lightStatus.innerHTML || DEFAULT_LIGHT_STATUS
+  qwest.get('/api/fen?userId=' + userId).then(function (xhr, res) {
+    var data = JSON.parse(res);
+    if (data['error']) {
+      console.log('Error:', data['error']);
+    } else {
+      board.position(data['fen']);
+    }
+  });
 
-  // sock.on('connect', () => {
-  //   console.log('Successfully connected')
-  // })
+  sock.on('connect', function () {
+    console.log('Successfully connected');
+  });
+
   // sock.emit('light', {lightStatus: DEFAULT_LIGHT_STATUS})
   // sock.on('light', function(data) {
   //   console.log('sock light data:', data)
@@ -4764,6 +4774,14 @@ window.onload = function () {
   //   document.body.style['background-color'] = data.lightStatus === 'on' ? 'white' : 'black'
   // })
 
+  sock.on(userId, function (data) {
+    console.log('Api Move:', data);
+    if (data.newGame) {
+      board.start();
+    } else {
+      board.move(data.from + '-' + data.to);
+    }
+  });
 };
 
 /***/ }),
