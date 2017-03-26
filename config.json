@@ -1,5 +1,9 @@
 {
   "APP_ID": "",
   "accessKeyId": "AKIAIK4T5CQAQ56SGNQQ",
-  "secretAccessKey": "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"
+  "secretAccessKey": "+QgSrOszrPrN5d8VN0X9Lo74sXpIXdRUA42vlukO",
+  "database": {
+    "username": "",
+    "password": ""
+  }
 }

@@ -8,96 +8,25 @@ var server = http.createServer(app);
 var io = require('socket.io').listen(server)
 
 io.on('connection', function(client){
-  // client.emit('light', {lightStatus: 'off'})
-  // client.on('light', function(data){
-  //   let userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
-  //   users.find(userId)
-  //       .then(user => {
-  //         if (user) {
-  //           data.lightStatus = user.lightStatus
-  //         }
-  //         client.emit('light', data)
-  //       })
-  //       .catch(err => {
-  //         console.log(err)
-  //         data.lightStatus = 'err'
-  //         data.error = err
-  //         client.emit('light', data)
-  //       })
-  // })
-
-  // client.on('move', function(data) {
-  //   console.log('Move:', data)
-  // })
-
   client.on('disconnect', function(){
     console.log(`Client disconnected`)
   })
-
 });
 
-const config = require('./config')
-let credentials = {
-    accessKeyId: config['accessKeyId'],
-    secretAccessKey: config['secretAccessKey'],
-    region: 'us-east-1'
-}
-const dynasty = require('dynasty')(credentials);
-let users = dynasty.table('alexaChessCompanionData')
+const db = require('./database_helper')
 
 app.use(express.static('public'))
 app.set('view engine', 'ejs')
 
 app.get('/', function (req, res) {
-  res.render('index', {message: 'This is my message'})
-})
-
-app.get('/light_status', function(req, res) {
-  res.render('lights', {message: 'message text stuff', lightStatus: ''})
-})
-
-app.get('/api/light_status', function(req, res) {
-  let data = {lightStatus: 'on'}
-  let userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
-  users.find(userId)
-      .then(user => {
-        if (user) {
-          data.lightStatus = user.lightStatus
-        }
-        res.send(JSON.stringify(data))
-      })
-      .catch(err => {
-        console.log(err)
-        data.lightStatus = 'err'
-        data.error = err
-        res.send(JSON.stringify(data))
-      })
-})
-
-app.get('/api/light_was_updated', function(req, res) {
-  let data = {lightStatus: 'on'}
-  let userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
-  users.find(userId)
-      .then(user => {
-        if (user) {
-          data.lightStatus = user.lightStatus
-        }
-        io.emit('light', data)
-        res.send(JSON.stringify(data))
-      })
-      .catch(err => {
-        console.log(err)
-        data.lightStatus = 'err'
-        data.error = err
-        io.emit('light', data)
-      })
+  res.render('index')
 })
 
 app.get('/api/move', function(req, res) {
   let from = req.query['from']
   let to = req.query['to']
   let userId = req.query['userId']
-  users.find(userId)
+  db.getUser(userId)
       .then(user => {
         if (!user) {
           return res.send(JSON.stringify({'error': 'Invalid userId'}))
@@ -114,7 +43,7 @@ app.get('/api/move', function(req, res) {
           io.emit(userId, {from: from, to: to, userId: userId})
           console.log('moving before')
           res.send(JSON.stringify({'move': from + '-' + to, userId: userId}))
-          users.update(userId, {game: game.fen()})
+          db.updateGame(userId, game.fen())
           console.log('moving after')
         } else {
           res.send(JSON.stringify({'error': 'Invalid Move', userId: userId}))
@@ -128,7 +57,7 @@ app.get('/api/move', function(req, res) {
 
 app.get('/api/fen', function(req, res) {
   let userId = req.query['userId']
-  users.find(userId)
+  db.getUser(userId)
       .then(user => {
         if (!user) {
           return res.send(JSON.stringify({'error': 'Invalid userId'}))
@@ -143,13 +72,13 @@ app.get('/api/fen', function(req, res) {
 
 app.get('/api/new_game', function(req, res) {
   let userId = req.query['userId']
-  users.find(userId)
+  db.getUser(userId)
       .then(user => {
         if (!user) {
           return res.send(JSON.stringify({'error': 'Invalid userId'}))
         }
         let game = new Chess()
-        users.update(userId, {game: game.fen()})
+        db.updateGame(userId, game.fen())
           .then(data => {
             res.send(JSON.stringify({'message': 'Successfully created a new game'}))
             io.emit(userId, {newGame: 'true'})
@@ -164,8 +93,5 @@ app.get('/api/new_game', function(req, res) {
       })
 })
 
-app.get('/api/tits', function(req, res) {
-  res.send(JSON.stringify({'message': 'I like tits'}))
-})
 
 server.listen(3000)
