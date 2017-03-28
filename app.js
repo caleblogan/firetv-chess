@@ -34,17 +34,42 @@ app.get('/api/move', function(req, res) {
         let game = null
         if (user.game) {
           game = new Chess(user.game)
-          console.log(game.fen())
         } else {
           game = new Chess()
         }
-        let move = game.move({from: from, to: to})
+        let move
+        if (!to) {
+          move = game.move(from)
+        } else {
+          move = game.move({from: from, to: to})
+        }
         if (move) {
-          io.emit(userId, {from: from, to: to, userId: userId})
-          console.log('moving before')
-          res.send(JSON.stringify({'move': from + '-' + to, userId: userId}))
+          io.emit(userId, {from: move.from, turn: game.turn(), to: move.to, userId: userId})
+
+          let aiMove
+          if (user.players === '1') {
+            let moves = game.moves()
+            aiMove = moves[Math.floor(Math.random() * moves.length)]
+            aiMove = game.move(aiMove)
+            io.emit(userId, {from: aiMove.from, turn: game.turn(), to: aiMove.to, userId: userId})
+          }
+
           db.updateGame(userId, game.fen())
-          console.log('moving after')
+          let resData = {
+            userId: userId,
+            turn: game.turn(),
+            move: {
+              from: move.from,
+              to: move.to
+            }
+          }
+          if (aiMove) {
+            resData.aiMove = {
+              from: aiMove.from,
+              to: aiMove.to
+            }
+          }
+          res.send(JSON.stringify(resData))
         } else {
           res.send(JSON.stringify({'error': 'Invalid Move', userId: userId}))
         }
@@ -62,7 +87,8 @@ app.get('/api/fen', function(req, res) {
         if (!user) {
           return res.send(JSON.stringify({'error': 'Invalid userId'}))
         }
-        res.send(JSON.stringify({fen: user.game}))
+        let game = new Chess(user.game)
+        res.send(JSON.stringify({fen: user.game, turn: game.turn()}))
       })
       .catch(err => {
         console.log('err:', err)
@@ -70,18 +96,50 @@ app.get('/api/fen', function(req, res) {
       })
 })
 
+/**
+ * Creates new game
+ * can only have one game
+ * query params:
+ *  - userId  -> echo userId
+ *  - color   -> white | black
+ *  - players -> 1 | 2
+ * @param  {[type]} req [description]
+ * @param  {[type]} res [description]
+ * @return [type]       [description]
+ */
 app.get('/api/new_game', function(req, res) {
   let userId = req.query['userId']
+  let color = req.query['color']
+  let players = req.query['players']
   db.getUser(userId)
       .then(user => {
         if (!user) {
           return res.send(JSON.stringify({'error': 'Invalid userId'}))
         }
         let game = new Chess()
-        db.updateGame(userId, game.fen())
+
+        db.newGame(userId, game.fen(), color, players)
           .then(data => {
-            res.send(JSON.stringify({'message': 'Successfully created a new game'}))
-            io.emit(userId, {newGame: 'true'})
+            io.emit(userId, {newGame: 'true', turn: game.turn()})
+            // have ai start as white
+            if (color === 'black' && (players === undefined || players === '1')) {
+              let moves = game.moves()
+              let move = moves[Math.floor(Math.random() * moves.length)]
+              move = game.move(move)
+              io.emit(userId, {from: move.from, turn: game.turn(), to: move.to, userId: userId})
+              let resData = {
+                userId: userId,
+                turn: game.turn(),
+                aiMove: {
+                  from: move.from,
+                  to: move.to
+                }
+              }
+              res.send(JSON.stringify(resData))
+              db.updateGame(userId, game.fen())
+            } else {
+              res.send(JSON.stringify({'message': 'Successfully created a new game'}))
+            }
           })
           .catch(err => {
             res.send(JSON.stringify({'error': 'There was a problem creating a new game'}))
@@ -93,5 +151,40 @@ app.get('/api/new_game', function(req, res) {
       })
 })
 
+/**
+ * Resets the game to default fen state. Keeps players and color state.
+ * @return [type] [description]
+ */
+app.get('/api/reset', function(req, res) {
+  let userId = req.query['userId']
+  let game = new Chess()
+  let resData = {}
+  db.getUser(userId)
+    .then(user => {
+      io.emit(userId, {newGame: 'true', turn: game.turn()})
+      let color = user.color
+      let players = user.players
+      if (color === 'black' && (players === undefined || players === '1')) {
+        let moves = game.moves()
+        let move = moves[Math.floor(Math.random() * moves.length)]
+        move = game.move(move)
+        io.emit(userId, {from: move.from, turn: game.turn(), to: move.to, userId: userId})
+        resData = {
+          userId: userId,
+          turn: game.turn(),
+          aiMove: {
+            from: move.from,
+            to: move.to
+          }
+        }
+      }
+      resData.message = 'Successfully reset game'
+      res.send(JSON.stringify(resData))
+      db.updateGame(userId, game.fen())
+    })
+    .catch(err => {
+      console.log('err:', err)
+    })
+})
 
 server.listen(3000)

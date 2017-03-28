@@ -8,3 +8,19 @@ body {
   height: 800px;
   background-color: blue;
 }
+
+#game {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#board {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#turn {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}

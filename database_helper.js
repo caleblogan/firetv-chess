@@ -32,5 +32,23 @@ module.exports = {
           reject(err)
         })
     })
+  },
+  newGame: function(userId, fen, color, players) {
+    if (!color) {
+      color = 'white'
+    }
+    if (!players) {
+      players = '1'
+    }
+    return new Promise((resolve, reject) => {
+      db.none('update users set game=$2, color=$3, players=$4 where userid=$1',
+              [userId, fen, color, players])
+        .then(data => {
+          resolve(data)
+        })
+        .catch(err => {
+          reject(err)
+        })
+    })
   }
 }

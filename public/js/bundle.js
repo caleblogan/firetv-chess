@@ -4750,6 +4750,7 @@ window.onload = function () {
     pieceTheme: '/chessboardjs/img/chesspieces/wikipedia/{piece}.png'
   };
   var board = ChessBoard('board', config);
+  $(window).resize(board.resize);
 
   qwest.get('/api/fen?userId=' + userId).then(function (xhr, res) {
     var data = JSON.parse(res);
@@ -4757,6 +4758,7 @@ window.onload = function () {
       console.log('Error:', data['error']);
     } else {
       board.position(data['fen']);
+      updateTurnDisplay(data['turn']);
     }
   });
 
@@ -4768,11 +4770,28 @@ window.onload = function () {
     console.log('Api Move:', data);
     if (data.newGame) {
       board.start();
-    } else {
+      updateTurnDisplay(data['turn']);
+    }
+    if (data.from && data.to) {
       board.move(data.from + '-' + data.to);
+      updateTurnDisplay(data['turn']);
     }
   });
 };
+
+function updateTurnDisplay(turn) {
+  if (turn === undefined) {
+    turn = 'w';
+  }
+
+  if (turn === 'w') {
+    turn = 'white';
+  } else if (turn === 'b') {
+    turn = 'black';
+  }
+  var turnElem = document.querySelector('#turn-content');
+  turnElem.innerHTML = turn;
+}
 
 /***/ }),
 /* 30 */
