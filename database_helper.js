@@ -6,7 +6,7 @@ const HOST = 'localhost'
 const PORT = '5432'
 const DATABASE_NAME = 'chessCompanion'
 const username = 'postgres'
-const password = 'dirtrider88'
+const password = 'masterman88'
 
 const db = pgp(`postgres://${username}:${password}@${HOST}:${PORT}/${DATABASE_NAME}`)
 
