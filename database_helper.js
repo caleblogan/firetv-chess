@@ -1,12 +1,19 @@
 'use strict'
 const pgp = require('pg-promise')()
-// const config = require('./config')
 
-const HOST = 'localhost'
-const PORT = '5432'
-const DATABASE_NAME = 'chessCompanion'
-const username = 'postgres'
-const password = 'masterman88'
+let config
+try {
+  config = require('../firetv_chess_config.json')
+} catch(e) {
+  console.log('Cant find config file. using env variables')
+  config = process.env
+}
+
+const HOST = config['database']['host']
+const PORT = config['database']['port']
+const DATABASE_NAME = config['database']['name']
+const username = config['database']['username']
+const password = config['database']['password']
 
 const db = pgp(`postgres://${username}:${password}@${HOST}:${PORT}/${DATABASE_NAME}`)
 

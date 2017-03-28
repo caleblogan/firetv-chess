@@ -1,19 +1,29 @@
-var express = require('express')
-var http = require('http')
-var app = module.exports.app = express()
+const express = require('express')
+const http = require('http')
+const app = module.exports.app = express()
+
 
 const Chess = require('chess.js').Chess
+const db = require('./database_helper')
 
-var server = http.createServer(app);
-var io = require('socket.io').listen(server)
+const server = http.createServer(app);
+const io = require('socket.io').listen(server)
+
+let config
+try {
+  config = require('../firetv_chess_config.json')
+} catch(e) {
+  console.log('Cant find config file. using env variables')
+  config = process.env
+}
+
+const PORT = config['port']
 
 io.on('connection', function(client){
   client.on('disconnect', function(){
     console.log(`Client disconnected`)
   })
 });
-
-const db = require('./database_helper')
 
 app.use(express.static('public'))
 app.set('view engine', 'ejs')
@@ -60,13 +70,15 @@ app.get('/api/move', function(req, res) {
             turn: game.turn(),
             move: {
               from: move.from,
-              to: move.to
+              to: move.to,
+              color: move.color
             }
           }
           if (aiMove) {
             resData.aiMove = {
               from: aiMove.from,
-              to: aiMove.to
+              to: aiMove.to,
+              color: aiMove.color
             }
           }
           res.send(JSON.stringify(resData))
@@ -187,4 +199,4 @@ app.get('/api/reset', function(req, res) {
     })
 })
 
-server.listen(3000)
+server.listen(PORT)

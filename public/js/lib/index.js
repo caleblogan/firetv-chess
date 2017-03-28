@@ -1,9 +1,17 @@
 const qwest = require('qwest')
-const sock = require('socket.io-client')('http://192.168.1.192:3000')
+const io = require('socket.io-client')
 
-const BASE_URL = 'localhost:3000'
+let config
+try {
+  config = require('../../../../firetv_chess_config.json')
+} catch(err) {
+  console.log('Config File not found:', err)
+}
 
-const userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ'
+const HOST = config['host']
+const PORT = config['port']
+const userId = config['userId']
+const sock = io(HOST + ':' + PORT)
 
 window.onload = function() {
   let config = {

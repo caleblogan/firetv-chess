@@ -4737,11 +4737,19 @@ module.exports = function(arraybuffer, start, end) {
 
 
 var qwest = __webpack_require__(25);
-var sock = __webpack_require__(26)('http://192.168.1.192:3000');
+var io = __webpack_require__(26);
 
-var BASE_URL = 'localhost:3000';
+var config = void 0;
+try {
+  config = __webpack_require__(61);
+} catch (err) {
+  console.log('Config File not found:', err);
+}
 
-var userId = 'amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ';
+var HOST = config['host'];
+var PORT = config['port'];
+var userId = config['userId'];
+var sock = io(HOST + ':' + PORT);
 
 window.onload = function () {
   var config = {
@@ -9831,6 +9839,26 @@ module.exports = __webpack_amd_options__;
 /***/ (function(module, exports) {
 
 /* (ignored) */
+
+/***/ }),
+/* 61 */
+/***/ (function(module, exports) {
+
+module.exports = {
+	"appId": "",
+	"host": "http://192.168.1.192",
+	"port": "3000",
+	"userId": "amzn1.ask.account.AGV53DZTOOAIBHLOZQ6RBPZ4ERLC2N2CAABQ424T5NNACE3DJFX6OZMZOZNXAKLKVKAUH5R4UBB2GF3GQURHIMKTJRPK2FYDQTIDFB4J2M23FKZQINRIGAJP7675EU6EWZMBY7K6LFZJMI4N5ZXXWZMDPWMAEIKUW5USWLSIJ7EK4ND6F7GXSOGYIGPLQMTCXHACHZME7EV2BJQ",
+	"accessKeyId": "AKIAIK4T5CQAQ56SGNQQ",
+	"secretAccessKey": "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",
+	"database": {
+		"name": "chessCompanion",
+		"username": "postgres",
+		"password": "masterman88",
+		"port": "5432",
+		"host": "localhost"
+	}
+};
 
 /***/ })
 /******/ ]);
